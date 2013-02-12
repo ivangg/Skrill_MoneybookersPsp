@@ -225,6 +225,7 @@ abstract class Skrill_MoneybookersPsp_Model_Abstract extends Mage_Payment_Model_
 
         $params = $this->_initRequestParams();
         $params['PAYMENT.CODE'] = $this->_getPaymentCode(self::PAYMENT_TYPE_PREAUTHORIZE);
+        $params['TRANSACTION.RESPONSE'] = 'ASYNC';
 
         // make API call
         $response = $this->_getApi()->request($params);

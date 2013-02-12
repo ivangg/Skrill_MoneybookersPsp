@@ -40,7 +40,7 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
      */
     protected function _processCancel() {
         // cancel order
-        
+
         //if ($this->_order->canCancel()) {
             $this->_order->cancel();
             $this->_order->addStatusToHistory(Mage_Sales_Model_Order::STATE_CANCELED,
@@ -80,13 +80,13 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
 
     public function successAction() {
         $statusCheck = Mage::getConfig()->getNode("global/customsettings/status_check");
-        
+
         if ($lastQuoteId = $this->_getCheckout()->getMoneybookersPspLastSuccessQuoteId()) {
             $this->_getCheckout()->setLastSuccessQuoteId($lastQuoteId);
 
             if ($statusCheck) {
                 $realOrderId = $this->_getCheckout()->getLastRealOrderId();
-                
+
                 $order = Mage::getModel('sales/order')->loadByIncrementId($realOrderId);
                 if ($order->getState() != Mage_Sales_Model_Order::STATE_PROCESSING){
                     $this->_order = $order;
@@ -111,7 +111,7 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
         if ($order && $order->getState() == Mage_Sales_Model_Order::STATE_CANCELED){
             $this->_redirect('checkout/cart');
         }
-        
+
         $this->loadLayout();
         $this->renderLayout();
     }
@@ -211,7 +211,7 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
 
 	if ($paymentCode[1] != 'DB')
 	    return $this->_getSuccessRedirectUrl();
-	
+
 	try {
 	    $session = $this->_getCheckout();
 
@@ -220,14 +220,14 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
             if (!$order->getId()) {
                 Mage::throwException(Mage::helper('moneybookerspsp')->__('An error occured during the payment process: Order not found.'));
             }
-            
+
 	    $payment = $order->getPayment()->getMethodInstance();
     	    $order->setState(
-        	    Mage_Sales_Model_Order::STATE_PROCESSING, 
-        	    $payment->getConfigData('order_status', $order->getStoreId()), 
+        	    Mage_Sales_Model_Order::STATE_PROCESSING,
+        	    $payment->getConfigData('order_status', $order->getStoreId()),
 		    Mage::helper('moneybookerspsp')->__('Payment debited successfully'));
     	    $paymentData = $this->_getPaymentData($xml);
-                
+
     	    $order->getPayment()
                 	->setLastTransId($paymentData['po_number'])
             		->setCcTransId($paymentData['po_number'])
@@ -235,13 +235,13 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
                 	->setBaseAmountAuthorized($order->getBaseTotalDue());
 
     	    $order->sendNewOrderEmail()->setEmailSent(true)->save();
-	} catch (Exception $e) { 
+	} catch (Exception $e) {
 	    Mage::log(Mage::helper('moneybookerspsp')->__('Order not found!'));
 	}
-	
+
 	return $this->_getSuccessRedirectUrl();
 	}
-    
+
     protected function _process3dsResponse() {
         if ($this->_getApi()->getConfigData('debug')) {
             Mage::log('_process3dsResponse():');
@@ -272,7 +272,9 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
     protected function _validate3dsRequest() {
         $response = urldecode($this->getRequest()->getPost('response'));
         $xml = $this->_getApi()->processXmlResponse($response);
-    
+        Mage::log('_validate3dsRequest:');
+        Mage::log($xml);
+
         if (!$xml->xpath('Transaction/Identification/TransactionID')
                 || !$xml->xpath('Transaction/Processing/Result')) {
             Mage::throwException(Mage::helper('moneybookerspsp')->__('MoneybookersPSP 3DS: Wrong XML request received'));
@@ -288,7 +290,7 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
         if (!$this->_order->getId()) {
             Mage::throwException(Mage::helper('moneybookerspsp')->__('MoneybookersPSP 3DS: Order not found'));
         }
-        
+
         $result = (string)current($xml->xpath('Transaction/Processing/Result'));
         if ($result != Skrill_MoneybookersPsp_Model_Abstract::PROCESSING_RESULT_OK) {
             Mage::throwException(Mage::helper('moneybookerspsp')->__('3DS Transaction failed'));

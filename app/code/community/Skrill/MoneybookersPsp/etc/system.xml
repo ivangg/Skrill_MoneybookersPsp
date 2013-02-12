@@ -21,7 +21,7 @@
 <config>
    <sections>
         <moneybookerspsp translate="label" module="moneybookerspsp">
-            <label>Moneybookers Quick Checkout Enterprise</label>
+            <label>Skrill Quick Checkout Enterprise</label>
             <tab>sales</tab>
             <frontend_type>text</frontend_type>
             <sort_order>990</sort_order>
