@@ -42,6 +42,15 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
         // cancel order
 
         //if ($this->_order->canCancel()) {
+            if ($this->_order->hasInvoices())
+            {
+                $invoices = $this->_order->getInvoiceCollection();
+                foreach ($invoices as $invoice)
+                {
+                    $invoice->cancel();
+                    $invoice->save();
+                }
+            }
             $this->_order->cancel();
             $this->_order->addStatusToHistory(Mage_Sales_Model_Order::STATE_CANCELED,
                                               Mage::helper('moneybookerspsp')->__(
@@ -179,6 +188,15 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
                             ->setAmountAuthorized($this->_order->getTotalDue())
                             ->setBaseAmountAuthorized($this->_order->getBaseTotalDue())
                             ->capture(null);
+
+                    if ($paymentCode[0] == 'VA') // forcefully set the invoice to PAID
+                    {
+                        $invoices = $this->_order->getInvoiceCollection();
+                        foreach ($invoices as $invoice)
+                        {
+                            $invoice->pay();
+                        }
+                    }
                 } catch (Mage_Core_Exception $e) {
                     //Do nothing if the Magento version is below 1.4.0
                     if (!version_compare(Mage::getVersion(), '1.4.0', '<')) {
@@ -205,12 +223,15 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
 
     protected function _process3dsOrder ($xml)
 	{
+        if ($this->_getApi()->getConfigData('debug')) {
+            Mage::log('_process3dsOrder():');
+            Mage::log($this->getRequest()->getPost());
+        }
 	$paymentCode = current($xml->xpath('Transaction/Payment'));
 	$paymentCode = (string) $paymentCode->attributes()->{'code'};
 	$paymentCode = explode('.', $paymentCode);
 
-	if ($paymentCode[1] != 'DB')
-	    return $this->_getSuccessRedirectUrl();
+        Mage::log($paymentCode);
 
 	try {
 	    $session = $this->_getCheckout();
@@ -221,11 +242,21 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
                 Mage::throwException(Mage::helper('moneybookerspsp')->__('An error occured during the payment process: Order not found.'));
             }
 
+            if ($order->hasInvoices())
+            {
+                $invoices = $order->getInvoiceCollection();
+                foreach ($invoices as $invoice)
+                {
+                    $invoice->pay();
+                    $invoice->save();
+                }
+            }
+
 	    $payment = $order->getPayment()->getMethodInstance();
     	    $order->setState(
         	    Mage_Sales_Model_Order::STATE_PROCESSING,
         	    $payment->getConfigData('order_status', $order->getStoreId()),
-		    Mage::helper('moneybookerspsp')->__('Payment debited successfully'));
+		    Mage::helper('moneybookerspsp')->__('Payment debited successfully'))->save();
     	    $paymentData = $this->_getPaymentData($xml);
 
     	    $order->getPayment()
@@ -255,7 +286,7 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
         $this->generateLayoutBlocks();
         $root = $this->getLayout()->getBlock('root');
         try {
-            $xml = $this->_validate3dsRequest();
+            $xml = $this->_validate3dsResponse();
 
             $root->setRedirectUrl($this->_process3dsOrder($xml));
         } catch (Exception $e) {
@@ -269,11 +300,9 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
         return;
     }
 
-    protected function _validate3dsRequest() {
+    protected function _validate3dsResponse() {
         $response = urldecode($this->getRequest()->getPost('response'));
         $xml = $this->_getApi()->processXmlResponse($response);
-        Mage::log('_validate3dsRequest:');
-        Mage::log($xml);
 
         if (!$xml->xpath('Transaction/Identification/TransactionID')
                 || !$xml->xpath('Transaction/Processing/Result')) {
@@ -476,6 +505,12 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
                     $order->getPayment()->getAdditionalInformation()) {
                 $redirectMessage = Mage::helper('moneybookerspsp')->__('Customer was redirected to 3D-Secure server.');
                 $update->addHandle('moneybookerspsp_processing_redirect_3ds_form');
+
+                $invoices = $order->getInvoiceCollection();
+                foreach ($invoices as $invoice)
+                {
+                    $invoice->setState(Mage_Sales_Model_Order_Invoice::STATE_OPEN);
+                }
             } else {
                 $redirectMessage = Mage::helper('moneybookerspsp')->__('Customer was redirected to Moneybookers.');
             }
@@ -483,6 +518,16 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
                 $order->setState(
                         Mage_Sales_Model_Order::STATE_PENDING_PAYMENT, $this->_getPendingPaymentStatus(), $redirectMessage
                 )->save();
+
+                if ($order->hasInvoices())
+                {
+                    $invoices = $order->getInvoiceCollection();
+                    foreach ($invoices as $invoice)
+                    {
+                        $invoice->setState(Mage_Sales_Model_Order_Invoice::STATE_OPEN);
+                        $invoice->save();
+                    }
+                }
             }
             Mage::register('current_order', $order);
 

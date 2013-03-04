@@ -25,6 +25,13 @@ class Skrill_MoneybookersPsp_Model_Va_Jcb extends Skrill_MoneybookersPsp_Model_V
     protected function _initRequestParams($isOrderPlaced = true)
     {
         $params = parent::_initRequestParams($isOrderPlaced);
+        if (Mage::getStoreConfig('general/country/default') == 'JP')
+        {
+            $params['NAME.TITLE'] = '';
+            $params['NAME.COMPANY'] = '';
+            $params['NAME.GIVEN'] = '';
+            $params['NAME.FAMILY'] = '';
+        }
         $params['CRITERION.MONEYBOOKERS_payment_methods'] = 'JCB,DIN';
 
         return $params;

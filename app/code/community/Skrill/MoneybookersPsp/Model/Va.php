@@ -69,7 +69,7 @@ class Skrill_MoneybookersPsp_Model_Va extends Skrill_MoneybookersPsp_Model_Abstr
 			    'DE' => 'DE',
 			    'FI' => 'FI',
 			    'BG' => 'BG');
-    
+
         $params = parent::_initRequestParams($isOrderPlaced);
         $params['FRONTEND.ENABLED'] = 'true';
 
@@ -92,7 +92,7 @@ class Skrill_MoneybookersPsp_Model_Va extends Skrill_MoneybookersPsp_Model_Abstr
         $billingAddress = $dataObject->getBillingAddress();
         $billingAddress = $dataObject->getBillingAddress();
 	$country = $billingAddress->getCountry();
-        
+
         try {
             $iso3_country = Mage::getModel('directory/country')->loadByCode($country)->getIso3Code();
             $params['CRITERION.MONEYBOOKERS_country'] = $iso3_country;

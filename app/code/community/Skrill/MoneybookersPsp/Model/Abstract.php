@@ -160,7 +160,7 @@ abstract class Skrill_MoneybookersPsp_Model_Abstract extends Mage_Payment_Model_
                 'IDENTIFICATION.TRANSACTIONID'  =>  $dataObject->getId() . '_' . $this->getCode(),
 
                 'PRESENTATION.USAGE'    =>  $dataObject->getIncrementId(),
-                'PRESENTATION.AMOUNT'   =>  round($dataObject->getGrandTotal(),2),
+                'PRESENTATION.AMOUNT'   =>  /*$dataObject->getGrandTotal(),*/round($dataObject->getGrandTotal(),2),
                 'PRESENTATION.CURRENCY' =>  Mage::app()->getStore()-> getCurrentCurrencyCode(),
                 'NAME.SALUTATION'       =>  null,
                 'NAME.TITLE'            =>  null,
@@ -190,7 +190,9 @@ abstract class Skrill_MoneybookersPsp_Model_Abstract extends Mage_Payment_Model_
                 'FRONTEND.LANGUAGE'     =>  $this->getLocale($dataObject->getStoreId()),
                 'FRONTEND.RESPONSE_URL' =>  $this->_getStatusUrl(),
                 'FRONTEND.SESSION_ID'   => $this->_getCheckout()->getSessionId(),
-                'FRONTEND.JSCRIPT_PATH' =>  $this->_formJsPath ? Mage::helper('core/js')->getJsUrl($this->_formJsPath) : '',
+                'FRONTEND.JSCRIPT_PATH' => Mage::getStoreConfig('general/country/default') == 'JP' ?
+                                    	    Mage::helper('core/js')->getJsUrl('skrill/moneybookerspsp/init_jp.js') :
+                                            Mage::helper('core/js')->getJsUrl($this->_formJsPath), 
                 'FRONTEND.CSS_PATH'     =>  $this->_formCssPath ? Mage::getDesign()->getSkinUrl($this->_formCssPath) : '',
                 'CRITERION.MONEYBOOKERS_hide_login'     =>   '1',
                 'FRONTEND.COLLECT_DATA' =>  'true',
@@ -248,7 +250,7 @@ abstract class Skrill_MoneybookersPsp_Model_Abstract extends Mage_Payment_Model_
         $params = $this->_initRequestParams();
         // Multiple currencies, multiple channels fix
         $params['PRESENTATION.CURRENCY'] = $payment->getOrder()->getOrderCurrencyCode();
-        $params['PRESENTATION.AMOUNT'] = round($amount,2);
+        $params['PRESENTATION.AMOUNT'] = round($payment->getOrder()->getGrandTotal(),2);
         $params['TRANSACTION.RESPONSE'] = 'ASYNC';
 
         if ($payment->getLastTransId()) {
