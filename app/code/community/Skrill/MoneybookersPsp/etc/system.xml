@@ -20,7 +20,7 @@
 -->
 <config>
    <sections>
-        <moneybookerspsp translate="label" module="moneybookerspsp">
+	 <moneybookerspsp translate="label" module="moneybookerspsp">
             <label>Skrill Quick Checkout Enterprise</label>
             <tab>sales</tab>
             <frontend_type>text</frontend_type>
@@ -341,7 +341,8 @@
                         </payment_action>
                     </fields>
                 </moneybookerspsp_elv>
-                <moneybookerspsp_va_idl translate="label" module="moneybookerspsp">
+                
+		<moneybookerspsp_va_idl translate="label" module="moneybookerspsp">
                     <label>iDeal</label>
                     <frontend_type>text</frontend_type>
                     <sort_order>30</sort_order>
@@ -1902,6 +1903,95 @@
                     </fields>
 	       </moneybookerspsp_va_fbe>
 	    </groups>
-        </moneybookerspsp>
-    </sections>
+         </moneybookerspsp>
+	 <paysafecard translate="label" module="moneybookerspsp">
+	    <label>PaySafe Card</label>
+            <tab>sales</tab>
+            <frontend_type>text</frontend_type>
+            <sort_order>989</sort_order>
+            <show_in_default>1</show_in_default>
+            <show_in_website>1</show_in_website>
+            <show_in_store>1</show_in_store>
+	    <groups>
+	       <moneybookerspsp_va_psc translate="label" module="moneybookerspsp">
+		  <label>PaySafe Card</label>
+		  <frontend_type>text</frontend_type>
+		  <sort_order>30</sort_order>
+		  <show_in_default>1</show_in_default>
+		  <show_in_website>1</show_in_website>
+		  <show_in_store>0</show_in_store>
+		  <fields>
+		      <active translate="label">
+			  <label>Enabled</label>
+			  <frontend_type>select</frontend_type>
+			  <source_model>adminhtml/system_config_source_yesno</source_model>
+			  <sort_order>10</sort_order>
+			  <show_in_default>1</show_in_default>
+			  <show_in_website>1</show_in_website>
+			  <show_in_store>0</show_in_store>
+		      </active>
+		      <order_status translate="label">
+			  <label>New order status</label>
+			  <frontend_type>select</frontend_type>
+			  <source_model>adminhtml/system_config_source_order_status</source_model>
+			  <sort_order>20</sort_order>
+			  <show_in_default>1</show_in_default>
+			  <show_in_website>1</show_in_website>
+			  <show_in_store>0</show_in_store>
+		      </order_status>
+		      <sort_order translate="label">
+			  <label>Sort order</label>
+			  <frontend_type>text</frontend_type>
+			  <sort_order>30</sort_order>
+			  <show_in_default>1</show_in_default>
+			  <show_in_website>1</show_in_website>
+			  <show_in_store>0</show_in_store>
+		      </sort_order>
+		      <title translate="label">
+			  <label>Title</label>
+			  <frontend_type>text</frontend_type>
+			  <sort_order>40</sort_order>
+			  <show_in_default>1</show_in_default>
+			  <show_in_website>1</show_in_website>
+			  <show_in_store>0</show_in_store>
+		      </title>
+		      <allowspecific translate="label">
+			  <label>Payment to applicable countries</label>
+			  <frontend_type>allowspecific</frontend_type>
+			  <sort_order>50</sort_order>
+			  <source_model>adminhtml/system_config_source_payment_allspecificcountries</source_model>
+			  <show_in_default>1</show_in_default>
+			  <show_in_website>1</show_in_website>
+			  <show_in_store>1</show_in_store>
+		      </allowspecific>
+		      <specificcountry translate="label">
+			  <label>Payment to Specific countries</label>
+			  <frontend_type>multiselect</frontend_type>
+			  <sort_order>60</sort_order>
+			  <source_model>adminhtml/system_config_source_country</source_model>
+			  <show_in_default>1</show_in_default>
+			  <show_in_website>1</show_in_website>
+			  <show_in_store>1</show_in_store>
+		      </specificcountry>
+		      <min_order_total translate="label">
+			  <label>Minimum Order Total</label>
+			  <frontend_type>text</frontend_type>
+			  <sort_order>70</sort_order>
+			  <show_in_default>1</show_in_default>
+			  <show_in_website>1</show_in_website>
+			  <show_in_store>0</show_in_store>
+		      </min_order_total>
+		      <max_order_total translate="label">
+			  <label>Maximum Order Total</label>
+			  <frontend_type>text</frontend_type>
+			  <sort_order>80</sort_order>
+			  <show_in_default>1</show_in_default>
+			  <show_in_website>1</show_in_website>
+			  <show_in_store>0</show_in_store>
+		      </max_order_total>
+		  </fields>
+               </moneybookerspsp_va_psc>
+	    </groups>
+	 </paysafecard>
+   </sections>
 </config>

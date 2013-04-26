@@ -209,6 +209,34 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
                 $redirectUrl = $this->_getSuccessRedirectUrl();
                 break;
             default:
+                if ($paymentCode[0] == 'VA' &&
+                    $paymentCode[1] == 'PA') // PaySafe Card fix
+                {
+                    $payment = $this->_order->getPayment()->getMethodInstance();
+                    $this->_order->setState(
+                            Mage_Sales_Model_Order::STATE_PROCESSING,
+                            $payment->getConfigData('order_status',
+                                                    $this->_order->getStoreId()),
+                                                    Mage::helper('moneybookerspsp')->__('Payment processed successfully with PaySafe Card')
+                    );
+                    $paymentData = $this->_getPaymentData($data);
+                
+                    $this->_order->getPayment()
+                            ->setLastTransId($paymentData['po_number'])
+                            ->setCcTransId($paymentData['po_number'])
+                            ->setAmountAuthorized($this->_order->getTotalDue())
+                            ->setBaseAmountAuthorized($this->_order->getBaseTotalDue())
+                            ->capture(null);
+
+                    $invoices = $this->_order->getInvoiceCollection();
+                    foreach ($invoices as $invoice)
+                    {
+                        $invoice->pay();
+                    }
+                    
+                    $this->_order->sendNewOrderEmail()->setEmailSent(true)->save();
+                    $redirectUrl = $this->_getSuccessRedirectUrl();
+                }
         }
         return $redirectUrl;
     }
@@ -600,7 +628,8 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
     		    'moneybookerspsp_va_ent',
     		    'moneybookerspsp_va_amx',
     		    'moneybookerspsp_va_jcb',
-    		    'moneybookerspsp_va_fbe');
+    		    'moneybookerspsp_va_fbe',
+                    'moneybookerspsp_va_psc');
     }
 
 }

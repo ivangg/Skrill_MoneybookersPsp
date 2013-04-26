@@ -21,7 +21,7 @@
 <config>
     <modules>
         <Skrill_MoneybookersPsp>
-            <version>1.0.12</version>
+            <version>1.1.0</version>
         </Skrill_MoneybookersPsp>
     </modules>
     <global>
@@ -122,6 +122,9 @@
                                         <moneybookerspsp translate="title" module="moneybookerspsp">
                                             <title>Skrill Quick Checkout Enterprise Settings</title>
                                         </moneybookerspsp>
+                                        <paysafecard translate="title" module="moneybookerspsp">
+                                            <title>PaySafe Card Settings</title>
+                                        </paysafecard>
                                     </children>
                                 </config>
                             </children>
@@ -202,6 +205,9 @@
             <moneybookerspsp_va_fbe>
                 <model>moneybookerspsp/va_fbe</model>
             </moneybookerspsp_va_fbe>
+            <moneybookerspsp_va_psc>
+                <model>moneybookerspsp/va_psc</model>
+            </moneybookerspsp_va_psc>
         </payment>
         <moneybookerspsp>
             <settings>
@@ -232,6 +238,13 @@
                 <title>Skrill Digital Wallet</title>
                 <allowspecific>0</allowspecific>
             </moneybookerspsp_va>
+            <moneybookerspsp_va_psc>
+                <active>0</active>
+                <model>moneybookerspsp/va_psc</model>
+                <order_status>processing</order_status>
+                <title>PaySafe Card</title>
+                <allowspecific>0</allowspecific>
+            </moneybookerspsp_va_psc>
             <moneybookerspsp_va_idl>
                 <active>0</active>
                 <model>moneybookerspsp/va_idl</model>

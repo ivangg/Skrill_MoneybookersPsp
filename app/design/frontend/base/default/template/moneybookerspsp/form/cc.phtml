@@ -50,6 +50,6 @@ $_formId = Mage::helper('moneybookerspsp')->getFormPlaceholderId($_code);
 <?php $_iframeSrcUrl = $this->getMethod()->getWPFRegisterFormUrl(); ?>
 <?php if (Mage::getStoreConfig('general/country/default') == 'JP') { ?>
 <div id="custommessage"></div>
-<? } php?>
+<?php } ?>
 <iframe id="<?php echo $_formId ?>" allowtransparency="true" frameborder="0" scrolling="no" src="<?php echo $_iframeSrcUrl ?>"></iframe>
 </fieldset>
