@@ -84,7 +84,13 @@ abstract class Skrill_MoneybookersPsp_Model_Abstract extends Mage_Payment_Model_
         if (null === $storeId) {
             $storeId = $this->getStore();
         }
-        $path = 'moneybookerspsp/'.$this->getCode().'/'.$field;
+        
+        $code = $this->getCode();
+        $path = 'moneybookerspsp/';
+        if ($code == 'moneybookerspsp_va_psc') // PaySafe Card configuration
+    	    $path = 'paysafecard/';
+        $path .= $code . '/' . $field;
+        
         return Mage::getStoreConfig($path, $storeId);
     }
 
@@ -93,6 +99,7 @@ abstract class Skrill_MoneybookersPsp_Model_Abstract extends Mage_Payment_Model_
         if (null === $storeId) {
             $storeId = $this->getStore();
         }
+
         $path = 'moneybookerspsp/settings/'.$field;
         return Mage::getStoreConfig($path, $storeId);
     }

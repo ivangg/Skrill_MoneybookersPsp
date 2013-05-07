@@ -403,5 +403,14 @@
                 <specificcountry>ES</specificcountry>
             </moneybookerspsp_va_fbe>
         </moneybookerspsp>
+        <paysafecard>
+    	    <moneybookerspsp_va_psc>
+                <active>0</active>
+                <model>moneybookerspsp/va_psc</model>
+                <order_status>processing</order_status>
+                <title>PaySafe Card</title>
+                <allowspecific>0</allowspecific>
+            </moneybookerspsp_va_psc>
+        </paysafecard>
     </default>
 </config>
