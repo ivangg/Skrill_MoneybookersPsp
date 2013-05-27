@@ -144,7 +144,7 @@ abstract class Skrill_MoneybookersPsp_Model_Abstract extends Mage_Payment_Model_
     {
         if (!$isOrderPlaced)
         {
-            if (!$dataObject = Mage::registry('current_quote')){
+            if (!($dataObject = Mage::registry('current_quote'))){
                 $dataObject = Mage::getSingleton('checkout/session')->getQuote();
             }
             $info = $dataObject->getPayment();
@@ -168,7 +168,7 @@ abstract class Skrill_MoneybookersPsp_Model_Abstract extends Mage_Payment_Model_
 
                 'PRESENTATION.USAGE'    =>  $dataObject->getIncrementId(),
                 'PRESENTATION.AMOUNT'   =>  /*$dataObject->getGrandTotal(),*/round($dataObject->getGrandTotal(),2),
-                'PRESENTATION.CURRENCY' =>  Mage::app()->getStore()-> getCurrentCurrencyCode(),
+                'PRESENTATION.CURRENCY' =>  $dataObject->getStore()->getCurrentCurrencyCode(),
                 'NAME.SALUTATION'       =>  null,
                 'NAME.TITLE'            =>  null,
                 'NAME.COMPANY'          =>  $billingAddress->getCompany(),
@@ -197,13 +197,13 @@ abstract class Skrill_MoneybookersPsp_Model_Abstract extends Mage_Payment_Model_
                 'FRONTEND.LANGUAGE'     =>  $this->getLocale($dataObject->getStoreId()),
                 'FRONTEND.RESPONSE_URL' =>  $this->_getStatusUrl(),
                 'FRONTEND.SESSION_ID'   => $this->_getCheckout()->getSessionId(),
-                'FRONTEND.JSCRIPT_PATH' => Mage::getStoreConfig('general/country/default') == 'JP' ?
+                'FRONTEND.JSCRIPT_PATH' => $dataObject->getStore()->getStoreConfig('general/country/default') == 'JP' ?
                                     	    Mage::helper('core/js')->getJsUrl('skrill/moneybookerspsp/init_jp.js') :
                                             Mage::helper('core/js')->getJsUrl($this->_formJsPath), 
                 'FRONTEND.CSS_PATH'     =>  $this->_formCssPath ? Mage::getDesign()->getSkinUrl($this->_formCssPath) : '',
                 'CRITERION.MONEYBOOKERS_hide_login'     =>   '1',
                 'FRONTEND.COLLECT_DATA' =>  'true',
-                'CRITERION.MONEYBOOKERS_recipient_description'  => Mage::app()->getStore($dataObject->getSoreId())->getName(),
+                'CRITERION.MONEYBOOKERS_recipient_description'  => $dataObject->getStore($dataObject->getSoreId())->getName(),
 //                'Timestamp'     =>  Mage::app()->getLocale()->date(time())->toString('YYYY-MM-ddTHH:mm:ss'),
         );
 
@@ -374,6 +374,7 @@ abstract class Skrill_MoneybookersPsp_Model_Abstract extends Mage_Payment_Model_
             $params['FRONTEND.ENABLED'] = 'true';
             $params['ACCOUNT.REGISTRATION'] = '';
 
+            $this->_getApi()->setStore($this->getStore());
             $result = $this->_getApi()->processWPFRequest($params);
             $result = $this->_getApi()->parseWPFResponse($result);
             if (isset($result['POST.VALIDATION'])

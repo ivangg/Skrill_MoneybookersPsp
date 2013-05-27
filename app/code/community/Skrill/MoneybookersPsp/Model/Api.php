@@ -229,6 +229,7 @@ class Skrill_MoneybookersPsp_Model_Api extends Varien_Object
             $storeId = $this->getStore();
         }
         $path = 'moneybookerspsp/settings/'.$field;
+        
         return Mage::getStoreConfig($path, $storeId);
     }
 

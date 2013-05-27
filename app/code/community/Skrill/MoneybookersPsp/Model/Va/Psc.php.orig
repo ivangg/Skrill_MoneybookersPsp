@@ -21,6 +21,8 @@
 class Skrill_MoneybookersPsp_Model_Va_Psc extends Skrill_MoneybookersPsp_Model_Va
 {
     protected $_code            = 'moneybookerspsp_va_psc';
+    protected $_canRefund       = false;
+    protected $_canVoid         = false;
     
     const PSC_PAYMENT_CODE_PA   = 'VA.PA';
     

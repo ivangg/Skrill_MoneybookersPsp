@@ -140,6 +140,8 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
                 Mage::log($data);
             }
 
+            //$this->_processPaymentAction($data);
+            //return;
             die($this->_processPaymentAction($data));
         } catch (Exception $e) {
             $msg = $e->getMessage();
@@ -170,6 +172,8 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
         switch ($paymentAction) {
             case 'RG':
                 $paymentData = $this->_getPaymentData($data);
+                
+                $this->_quote->getPayment()->setQuote(Mage::registry('current_quote'));
                 $this->_quote->getPayment()->importData($paymentData);
                 $this->_quote->save();
                 $redirectUrl = $this->_getRegisterSuccessRedirectUrl();
@@ -259,8 +263,6 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
 	$paymentCode = (string) $paymentCode->attributes()->{'code'};
 	$paymentCode = explode('.', $paymentCode);
 
-        Mage::log($paymentCode);
-
 	try {
 	    $session = $this->_getCheckout();
 
@@ -279,20 +281,23 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
                     $invoice->save();
                 }
             }
-
+            
 	    $payment = $order->getPayment()->getMethodInstance();
-    	    $order->setState(
-        	    Mage_Sales_Model_Order::STATE_PROCESSING,
-        	    $payment->getConfigData('order_status', $order->getStoreId()),
-		    Mage::helper('moneybookerspsp')->__('Payment debited successfully'))->save();
     	    $paymentData = $this->_getPaymentData($xml);
 
     	    $order->getPayment()
                 	->setLastTransId($paymentData['po_number'])
             		->setCcTransId($paymentData['po_number'])
                 	->setAmountAuthorized($order->getTotalDue())
-                	->setBaseAmountAuthorized($order->getBaseTotalDue());
+                	->setBaseAmountAuthorized($order->getBaseTotalDue())
+                	->setAmountAuthorized($order->getTotalDue())
+                        ->setBaseAmountAuthorized($order->getBaseTotalDue())
+                        ->capture(null);
 
+            $order->setState(
+        	    Mage_Sales_Model_Order::STATE_PROCESSING,
+        	    $payment->getConfigData('order_status', $order->getStoreId()),
+		    Mage::helper('moneybookerspsp')->__('Payment debited successfully'))->save();
     	    $order->sendNewOrderEmail()->setEmailSent(true)->save();
 	} catch (Exception $e) {
 	    Mage::log(Mage::helper('moneybookerspsp')->__('Order not found!'));

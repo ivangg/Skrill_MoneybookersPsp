@@ -103,8 +103,28 @@ class Skrill_MoneybookersPsp_Model_Va extends Skrill_MoneybookersPsp_Model_Abstr
         return $params;
     }
 
-    public function _isAvailable($quote = null)
+    protected function _isAvailable($quote = null)
     {
-        return (bool)$this->getWPFDebitFormUrl(false);
+	$session = Mage::getSingleton("core/session");
+	
+	$isAvailName = 'isAvailableVA';
+	if (preg_match('/moneybookerspsp_va_(.*)/', $this->_code, $mcode))
+	    $isAvailName = 'isAvailableVA' . strtoupper($mcode[1]);
+	
+	$isAvailable = $session->getData($isAvailName);
+        if (null === $isAvailable || !isset($isAvailable))
+            {
+            $payment = $quote->getPayment();
+            $isAvailable = $payment->getAdditionalInformation($isAvailName);
+            
+            if (null === $isAvailable || !isset($isAvailable))
+                {
+		$isAvailable = (bool)$this->getWPFDebitFormUrl(false);
+                $payment->setAdditionalInformation($isAvailName, $isAvailable);
+                $session->setData($isAvailName);
+                }
+            }
+
+	return $isAvailable;
     }
 }

@@ -88,4 +88,25 @@ class Skrill_MoneybookersPsp_Model_Cc extends Skrill_MoneybookersPsp_Model_Abstr
     {
         return self::$_orderPlaceRedirectUrl;
     }
+    
+    protected function _isAvailable($quote = null)
+    {
+        $session = Mage::getSingleton("core/session");
+        $isAvailable = $session->getIsAvailableCC();
+
+        if (null === $isAvailable || !isset($isAvailable))
+        {
+            $payment = $quote->getPayment();
+            $isAvailable = $payment->getAdditionalInformation('isAvailableCC');
+            
+            if (null === $isAvailable || !isset($isAvailable))
+            {
+                $isAvailable = (bool)$this->getWPFRegisterFormUrl();
+                $payment->setAdditionalInformation('isAvailableCC', $isAvailable);
+                $session->setIsAvailableCC($isAvailable);
+            }
+        }
+
+        return $isAvailable;
+    }
 }
