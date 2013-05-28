@@ -320,7 +320,6 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
         $root = $this->getLayout()->getBlock('root');
         try {
             $xml = $this->_validate3dsResponse();
-            Mage::log($this->_order->getPayment()->getAmountPaid());
 
             $root->setRedirectUrl($this->_process3dsOrder($xml));
         } catch (Exception $e) {
