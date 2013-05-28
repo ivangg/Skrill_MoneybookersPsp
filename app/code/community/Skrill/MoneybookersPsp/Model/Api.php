@@ -35,11 +35,13 @@ class Skrill_MoneybookersPsp_Model_Api extends Varien_Object
      */
     public function preauthorize(Array $params)
     {
+        $url = $this->getUrl();
+        
         $this->_loadTemplate('general');
         $this->setData($params);
         $response = $this->_processRequest(
             $this->_getParsedXml(),
-            $this->getUrl()
+            $url
         );
 
         return $this->_processXmlResponse($response);
@@ -47,11 +49,13 @@ class Skrill_MoneybookersPsp_Model_Api extends Varien_Object
 
     public function request($params)
     {
+        $url = $this->getUrl();
+
         $this->_loadTemplate('general');
         $this->setData($params);
         $response = $this->_processRequest(
             $this->_getParsedXml(),
-            $this->getUrl()
+            $url
         );
 
         return $this->_processXmlResponse($response);
@@ -64,12 +68,14 @@ class Skrill_MoneybookersPsp_Model_Api extends Varien_Object
      */
     public function capture(Array $params)
     {
+        $url = $this->getUrl();
+        
         $this->_loadTemplate('general');
         $this->setData($params);
 
         $response = $this->_processRequest(
             $this->_getParsedXml(),
-            $this->getUrl()
+            $url
         );
 
         $xml = @simplexml_load_string($response);
@@ -88,12 +94,14 @@ class Skrill_MoneybookersPsp_Model_Api extends Varien_Object
      */
     public function refund(Array $params)
     {
+        $url = $this->getUrl();
+        
         $this->_loadTemplate('general');
         $this->setData($params);
 
         $response = $this->_processRequest(
             $this->_getParsedXml(),
-            $this->getUrl()
+            $url
         );
 
         $xml = @simplexml_load_string($response);
@@ -112,12 +120,13 @@ class Skrill_MoneybookersPsp_Model_Api extends Varien_Object
      */
     public function void($transactionId)
     {
+        $url = $this->getUrl('void');
         $this->_loadTemplate('void');
         $this->setData('transactionId', $transactionId);
 
         $response = $this->_processRequest(
             $this->_getParsedXml(),
-            $this->getUrl('void')
+            $url
         );
 
         $xml = @simplexml_load_string($response);
@@ -228,6 +237,7 @@ class Skrill_MoneybookersPsp_Model_Api extends Varien_Object
         if (null === $storeId) {
             $storeId = $this->getStore();
         }
+
         $path = 'moneybookerspsp/settings/'.$field;
         
         return Mage::getStoreConfig($path, $storeId);

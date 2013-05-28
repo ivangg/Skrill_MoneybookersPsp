@@ -140,8 +140,6 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
                 Mage::log($data);
             }
 
-            //$this->_processPaymentAction($data);
-            //return;
             die($this->_processPaymentAction($data));
         } catch (Exception $e) {
             $msg = $e->getMessage();
@@ -254,7 +252,7 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
     }
 
     protected function _process3dsOrder ($xml)
-	{
+    {
         if ($this->_getApi()->getConfigData('debug')) {
             Mage::log('_process3dsOrder():');
             Mage::log($this->getRequest()->getPost());
@@ -272,6 +270,20 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
                 Mage::throwException(Mage::helper('moneybookerspsp')->__('An error occured during the payment process: Order not found.'));
             }
 
+	    $payment = $order->getPayment()->getMethodInstance();
+    	    $paymentData = $this->_getPaymentData($xml);
+            
+            $order->setTotalPaid(0);
+            $order->setBaseTotalPaid(0);
+    	    $order->getPayment()
+                	->setLastTransId($paymentData['po_number'])
+            		->setCcTransId($paymentData['po_number'])
+                	->setAmountAuthorized($order->getTotalDue())
+                	->setBaseAmountAuthorized($order->getBaseTotalDue())
+                        ->setBaseAmountPaid(0)
+                        ->setAmountPaid(0);
+            $order->save();
+            
             if ($order->hasInvoices())
             {
                 $invoices = $order->getInvoiceCollection();
@@ -282,29 +294,17 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
                 }
             }
             
-	    $payment = $order->getPayment()->getMethodInstance();
-    	    $paymentData = $this->_getPaymentData($xml);
-
-    	    $order->getPayment()
-                	->setLastTransId($paymentData['po_number'])
-            		->setCcTransId($paymentData['po_number'])
-                	->setAmountAuthorized($order->getTotalDue())
-                	->setBaseAmountAuthorized($order->getBaseTotalDue())
-                	->setAmountAuthorized($order->getTotalDue())
-                        ->setBaseAmountAuthorized($order->getBaseTotalDue())
-                        ->capture(null);
-
             $order->setState(
         	    Mage_Sales_Model_Order::STATE_PROCESSING,
         	    $payment->getConfigData('order_status', $order->getStoreId()),
-		    Mage::helper('moneybookerspsp')->__('Payment debited successfully'))->save();
+		    Mage::helper('moneybookerspsp')->__('Payment debited successfully'));
     	    $order->sendNewOrderEmail()->setEmailSent(true)->save();
 	} catch (Exception $e) {
 	    Mage::log(Mage::helper('moneybookerspsp')->__('Order not found!'));
 	}
 
 	return $this->_getSuccessRedirectUrl();
-	}
+    }
 
     protected function _process3dsResponse() {
         if ($this->_getApi()->getConfigData('debug')) {
@@ -320,6 +320,7 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
         $root = $this->getLayout()->getBlock('root');
         try {
             $xml = $this->_validate3dsResponse();
+            Mage::log($this->_order->getPayment()->getAmountPaid());
 
             $root->setRedirectUrl($this->_process3dsOrder($xml));
         } catch (Exception $e) {
