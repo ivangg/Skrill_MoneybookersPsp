@@ -287,10 +287,11 @@ abstract class Skrill_MoneybookersPsp_Model_Abstract extends Mage_Payment_Model_
         $params = $this->_initRequestParams();
         // Multiple currencies, multiple channels fix
         $params['PRESENTATION.CURRENCY'] = $payment->getOrder()->getOrderCurrencyCode();
-        $params['PRESENTATION.AMOUNT'] = $amount;
+        $params['PRESENTATION.AMOUNT'] = round($amount, 2);
         $params['PAYMENT.CODE'] = $this->_getPaymentCode(self::PAYMENT_TYPE_REFUND);
         $params['IDENTIFICATION.REFERENCEID'] = $payment->getLastTransId();
 
+        $this->_getApi()->setStore($this->getStore());
         $response = $this->_getApi()->request($params);
         $this->_processResponse($params, $response, $payment);
 

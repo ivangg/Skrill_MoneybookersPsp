@@ -182,6 +182,7 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
                         Mage_Sales_Model_Order::STATE_PROCESSING, $payment->getConfigData('order_status', $this->_order->getStoreId()), Mage::helper('moneybookerspsp')->__('Payment debited successfully')
                 );
                 $paymentData = $this->_getPaymentData($data);
+                Mage::log($paymentData);
                 // set transaction ID
                 try {
                     $this->_order->getPayment()
@@ -196,6 +197,7 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
                         $invoices = $this->_order->getInvoiceCollection();
                         foreach ($invoices as $invoice)
                         {
+                            $invoice->setTransactionId($paymentData['po_number']);
                             $invoice->pay();
                         }
                     }
