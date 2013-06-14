@@ -23,6 +23,7 @@ class Skrill_MoneybookersPsp_Model_Va_Psc extends Skrill_MoneybookersPsp_Model_V
     protected $_code            = 'moneybookerspsp_va_psc';
     
     const PSC_PAYMENT_CODE_PA   = 'VA.PA';
+    const PSC_ORDER_LIMIT       = 1000;
     
     protected function _getPaymentCode($paymentType)
     {
@@ -41,6 +42,12 @@ class Skrill_MoneybookersPsp_Model_Va_Psc extends Skrill_MoneybookersPsp_Model_V
         $params['FRONTEND.PM.1.METHOD'] = '';
 
         return $params;
+    }
+    
+    protected function _isAvailable($quote = null)
+    {
+        //if ($quote->getGrandTotal() > 
+        return parent::_isAvailable($quote);
     }
 }
 

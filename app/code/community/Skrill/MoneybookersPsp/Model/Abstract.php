@@ -58,6 +58,7 @@ abstract class Skrill_MoneybookersPsp_Model_Abstract extends Mage_Payment_Model_
     protected $_canUseCheckout          = true;
     protected $_canUseForMultishipping  = false;
     protected $_isInitializeNeeded      = false;
+    protected $_canRefundInvoicePartial = true;
 
     protected $_paymentMethod;
     protected $_defaultLocale		= 'en';
@@ -168,7 +169,7 @@ abstract class Skrill_MoneybookersPsp_Model_Abstract extends Mage_Payment_Model_
 
                 'PRESENTATION.USAGE'    =>  $dataObject->getIncrementId(),
                 'PRESENTATION.AMOUNT'   =>  /*$dataObject->getGrandTotal(),*/round($dataObject->getGrandTotal(),2),
-                'PRESENTATION.CURRENCY' =>  $dataObject->getStore()->getCurrentCurrencyCode(),
+                'PRESENTATION.CURRENCY' =>  $dataObject->getStore($dataObject->getSoreId())->getCurrentCurrencyCode(),
                 'NAME.SALUTATION'       =>  null,
                 'NAME.TITLE'            =>  null,
                 'NAME.COMPANY'          =>  $billingAddress->getCompany(),
@@ -257,7 +258,11 @@ abstract class Skrill_MoneybookersPsp_Model_Abstract extends Mage_Payment_Model_
         $params = $this->_initRequestParams();
         // Multiple currencies, multiple channels fix
         $params['PRESENTATION.CURRENCY'] = $payment->getOrder()->getOrderCurrencyCode();
-        $params['PRESENTATION.AMOUNT'] = round($payment->getOrder()->getGrandTotal(),2);
+        
+        $amount = $amount >= $payment->getOrder()->getGrandTotal() ?
+                            $payment->getOrder()->getGrandTotal() : $amount;
+        $params['PRESENTATION.AMOUNT'] = round($amount,2);
+        
         $params['TRANSACTION.RESPONSE'] = 'ASYNC';
 
         if ($payment->getLastTransId()) {
@@ -287,7 +292,12 @@ abstract class Skrill_MoneybookersPsp_Model_Abstract extends Mage_Payment_Model_
         $params = $this->_initRequestParams();
         // Multiple currencies, multiple channels fix
         $params['PRESENTATION.CURRENCY'] = $payment->getOrder()->getOrderCurrencyCode();
-        $params['PRESENTATION.AMOUNT'] = round($amount, 2);
+        $params['PRESENTATION.CURRENCY'] = $payment->getOrder()->getOrderCurrencyCode();
+        
+        $amount = $amount >= $payment->getOrder()->getGrandTotal() ?
+                            $payment->getOrder()->getGrandTotal() : $amount;
+        $params['PRESENTATION.AMOUNT'] = round($amount,2);
+        
         $params['PAYMENT.CODE'] = $this->_getPaymentCode(self::PAYMENT_TYPE_REFUND);
         $params['IDENTIFICATION.REFERENCEID'] = $payment->getLastTransId();
 

@@ -30,6 +30,7 @@ class Skrill_MoneybookersPsp_Model_Cc extends Skrill_MoneybookersPsp_Model_Abstr
     protected $_canUseCheckout          = true;
     protected $_canUseForMultishipping  = false;
     protected $_isInitializeNeeded      = false;
+    protected $_canRefundInvoicePartial = true;
 
     protected $_paymentMethod           = 'CC';
     protected $_defaultLocale		= 'en';
