@@ -104,6 +104,15 @@ abstract class Skrill_MoneybookersPsp_Model_Abstract extends Mage_Payment_Model_
         $path = 'moneybookerspsp/settings/'.$field;
         return Mage::getStoreConfig($path, $storeId);
     }
+    
+    public function getStoreWebSiteConfigData ($field, $store = null)
+    {
+        if (!$store)
+            $store = $this->getStore();
+        $website = $store->getWebsite();
+        
+        return $website->getConfig('moneybookerspsp/settings/' . $field);
+    }
 
     public function isAvailable($quote = null)
     {
@@ -155,21 +164,33 @@ abstract class Skrill_MoneybookersPsp_Model_Abstract extends Mage_Payment_Model_
         }
         $billingAddress = $dataObject->getBillingAddress();
 
+        $sendbaseamount = $this->getCommonConfigData('sendbaseamount');
+
         $params = array(
                 //'autoCapture'           =>  ($this->getConfigData('payment_action') == self::ACTION_AUTHORIZE_CAPTURE) ? 'true' : 'false',
                 'REQUEST.VERSION'       =>  '1.0',
-                'SECURITY.SENDER'       =>  $this->getCommonConfigData('sender'),
-                'SECURITY.TOKEN'        =>  $this->getCommonConfigData('token'),
-                'USER.LOGIN'            =>  $this->getCommonConfigData('login'),
-                'USER.PWD'              =>  $this->getCommonConfigData('password'),
-                'TRANSACTION.CHANNEL'   =>  $this->getCommonConfigData('channel'),
+                'SECURITY.SENDER'       =>  $sendbaseamount ?   $this->getStoreWebSiteConfigData('sender', $dataObject->getStore()) :
+                                                                $this->getCommonConfigData('sender'),
+                'SECURITY.TOKEN'        =>  $sendbaseamount ?   $this->getStoreWebSiteConfigData('token', $dataObject->getStore()) :
+                                                                $this->getCommonConfigData('token'),
+                'USER.LOGIN'            =>  $sendbaseamount ?   $this->getStoreWebSiteConfigData('login', $dataObject->getStore()) :
+                                                                $this->getCommonConfigData('login'),
+                'USER.PWD'              =>  $sendbaseamount ?   $this->getStoreWebSiteConfigData('password', $dataObject->getStore()) :
+                                                                $this->getCommonConfigData('password'),
+                'TRANSACTION.CHANNEL'   =>  $sendbaseamount ?   $this->getStoreWebSiteConfigData('channel', $dataObject->getStore()) :
+                                                                $this->getCommonConfigData('channel'),
                 'TRANSACTION.RESPONSE'  =>  'SYNC',
-                'TRANSACTION.MODE'      =>  $this->getCommonConfigData('test_mode') ? 'CONNECTOR_TEST' : 'LIVE',
+                'TRANSACTION.MODE'      =>  ($sendbaseamount ?   $this->getStoreWebSiteConfigData('test_mode', $dataObject->getStore()) :
+                                            $this->getCommonConfigData('test_mode')) ? 'CONNECTOR_TEST' : 'LIVE',
+                
                 'IDENTIFICATION.TRANSACTIONID'  =>  $dataObject->getId() . '_' . $this->getCode(),
 
                 'PRESENTATION.USAGE'    =>  $dataObject->getIncrementId(),
-                'PRESENTATION.AMOUNT'   =>  /*$dataObject->getGrandTotal(),*/round($dataObject->getGrandTotal(),2),
-                'PRESENTATION.CURRENCY' =>  $dataObject->getStore($dataObject->getSoreId())->getCurrentCurrencyCode(),
+                // Alternative send web site base amount and currency instead the one for the specific store view
+                'PRESENTATION.AMOUNT'   =>  $sendbaseamount ?   round($dataObject->getBaseGrandTotal(), 2) :
+                                                                round($dataObject->getGrandTotal(),2),
+                'PRESENTATION.CURRENCY' =>  $sendbaseamount ?   $dataObject->getStore()->getBaseCurrencyCode() :
+                                                                $dataObject->getStore($dataObject->getSoreId())->getCurrentCurrencyCode(),
                 'NAME.SALUTATION'       =>  null,
                 'NAME.TITLE'            =>  null,
                 'NAME.COMPANY'          =>  $billingAddress->getCompany(),
@@ -246,9 +267,12 @@ abstract class Skrill_MoneybookersPsp_Model_Abstract extends Mage_Payment_Model_
 
     public function capture(Varien_Object $payment, $amount)
     {
-        // Multiple currencies, multiple channels fix
-        $amount = $amount * $payment->getOrder()->getBaseToOrderRate();
-
+        $sendbaseamount = $this->getCommonConfigData('sendbaseamount');
+        if (!$sendbaseamount)
+        {
+            // Multiple currencies, multiple channels fix
+            $amount = $amount * $payment->getOrder()->getBaseToOrderRate();
+        }
         parent::capture($payment, $amount);
 
         if (!$payment->getPoNumber() && $payment->getLastTransId()){
@@ -256,11 +280,20 @@ abstract class Skrill_MoneybookersPsp_Model_Abstract extends Mage_Payment_Model_
         }
 
         $params = $this->_initRequestParams();
-        // Multiple currencies, multiple channels fix
-        $params['PRESENTATION.CURRENCY'] = $payment->getOrder()->getOrderCurrencyCode();
         
-        $amount = $amount >= $payment->getOrder()->getGrandTotal() ?
-                            $payment->getOrder()->getGrandTotal() : $amount;
+        if ($sendbaseamount)
+        {
+            $amount = $amount >= $payment->getOrder()->getBaseGrandTotal() ?
+                                $payment->getOrder()->getBaseGrandTotal() : $amount;
+            $params['PRESENTATION.CURRENCY'] = $payment->getOrder()->getBaseCurrencyCode();
+        }
+        else
+        {
+            $amount = $amount >= $payment->getOrder()->getGrandTotal() ?
+                                $payment->getOrder()->getGrandTotal() : $amount;
+            // Multiple currencies, multiple channels fix
+            $params['PRESENTATION.CURRENCY'] = $payment->getOrder()->getOrderCurrencyCode();
+        }
         $params['PRESENTATION.AMOUNT'] = round($amount,2);
         
         $params['TRANSACTION.RESPONSE'] = 'ASYNC';
@@ -284,18 +317,29 @@ abstract class Skrill_MoneybookersPsp_Model_Abstract extends Mage_Payment_Model_
      */
     public function refund(Varien_Object $payment, $amount)
     {
-        // Multiple currencies, multiple channels fix
-        $amount = $amount * $payment->getOrder()->getBaseToOrderRate();
-
+        $sendbaseamount = $this->getCommonConfigData('sendbaseamount');
+        if (!$sendbaseamount)
+        {
+            // Multiple currencies, multiple channels fix
+            $amount = $amount * $payment->getOrder()->getBaseToOrderRate();
+        }
         parent::refund($payment, $amount);
 
         $params = $this->_initRequestParams();
-        // Multiple currencies, multiple channels fix
-        $params['PRESENTATION.CURRENCY'] = $payment->getOrder()->getOrderCurrencyCode();
-        $params['PRESENTATION.CURRENCY'] = $payment->getOrder()->getOrderCurrencyCode();
         
-        $amount = $amount >= $payment->getOrder()->getGrandTotal() ?
-                            $payment->getOrder()->getGrandTotal() : $amount;
+        if ($sendbaseamount)
+        {
+            $amount = $amount >= $payment->getOrder()->getBaseGrandTotal() ?
+                                $payment->getOrder()->getBaseGrandTotal() : $amount;
+            $params['PRESENTATION.CURRENCY'] = $payment->getOrder()->getBaseCurrencyCode();
+        }
+        else
+        {
+            $amount = $amount >= $payment->getOrder()->getGrandTotal() ?
+                                $payment->getOrder()->getGrandTotal() : $amount;
+            // Multiple currencies, multiple channels fix
+            $params['PRESENTATION.CURRENCY'] = $payment->getOrder()->getOrderCurrencyCode();
+        }
         $params['PRESENTATION.AMOUNT'] = round($amount,2);
         
         $params['PAYMENT.CODE'] = $this->_getPaymentCode(self::PAYMENT_TYPE_REFUND);
