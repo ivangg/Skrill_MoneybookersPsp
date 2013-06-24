@@ -41,22 +41,6 @@ class Skrill_MoneybookersPsp_Model_Elv extends Skrill_MoneybookersPsp_Model_Abst
     
     protected function _isAvailable($quote = null)
     {
-        $session = Mage::getSingleton("core/session");
-        $isAvailable = $session->getIsAvailableDD();
-        
-        if (null === $isAvailable || !isset($isAvailable))
-        {
-            $payment = $quote->getPayment();
-            $isAvailable = $payment->getAdditionalInformation('isAvailableDD');
-            
-            if (null === $isAvailable || !isset($isAvailable))
-            {
-                $isAvailable = (bool)$this->getWPFRegisterFormUrl();
-                $payment->setAdditionalInformation('isAvailableDD', $isAvailable);
-                $session->setIsAvailableDD($isAvailable);
-            }
-        }
-
-        return $isAvailable;
+        return true;
     }
 }

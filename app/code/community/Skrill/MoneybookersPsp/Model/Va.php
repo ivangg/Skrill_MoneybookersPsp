@@ -110,20 +110,38 @@ class Skrill_MoneybookersPsp_Model_Va extends Skrill_MoneybookersPsp_Model_Abstr
 	$isAvailName = 'isAvailableVA';
 	if (preg_match('/moneybookerspsp_va_(.*)/', $this->_code, $mcode))
 	    $isAvailName = 'isAvailableVA' . strtoupper($mcode[1]);
+	$isAvailNameTS = $isAvailName . 'TS';
 	
 	$isAvailable = $session->getData($isAvailName);
+	$isAvailableTS = $session->getData($isAvailNameTS);
+	$payment = $quote->getPayment();
+	
+	if (isset($isAvailable) &&
+            time() - $isAvailableTS
+            >= Skrill_MoneybookersPsp_Model_Abstract::REFRESH_PMETHOD_AVAILABILITY_PERIOD)
+        {
+            $isAvailable = (bool)$this->getWPFDebitFormUrl(false);
+	    $isAvailableTS = time();
+            $payment->setAdditionalInformation($isAvailName, $isAvailable);
+            $payment->setAdditionalInformation($isAvailNameTS, $isAvailableTS);
+            $session->setData($isAvailName, $isAvailable);
+            $session->setData($isAvailNameTS, $isAvailableTS);
+        }
+	
         if (null === $isAvailable || !isset($isAvailable))
-            {
-            $payment = $quote->getPayment();
+        {
             $isAvailable = $payment->getAdditionalInformation($isAvailName);
-            
-            if (null === $isAvailable || !isset($isAvailable))
-                {
+            $isAvailableTS = $payment->getAdditionalInformation($isAvailNameTS);
+	    if (null === $isAvailable || !isset($isAvailable))
+            {
 		$isAvailable = (bool)$this->getWPFDebitFormUrl(false);
+		$isAvailableTS = time();
                 $payment->setAdditionalInformation($isAvailName, $isAvailable);
-                $session->setData($isAvailName);
-                }
-            }
+                $payment->setAdditionalInformation($isAvailNameTS, $isAvailableTS);
+	    }
+	    $session->setData($isAvailName, $isAvailable);
+	    $session->setData($isAvailNameTS, $isAvailableTS);
+        }
 
 	return $isAvailable;
     }

@@ -41,6 +41,8 @@ abstract class Skrill_MoneybookersPsp_Model_Abstract extends Mage_Payment_Model_
     const PROCESSING_STATUS_CODE_REJECTED_BANK = 60;
     const PROCESSING_STATUS_CODE_NEUTRAL = 40;
     const PROCESSING_STATUS_CODE_SUCCESS = 00;
+    
+    const REFRESH_PMETHOD_AVAILABILITY_PERIOD   = 900;
 
     /**
      * unique internal payment method identifier
