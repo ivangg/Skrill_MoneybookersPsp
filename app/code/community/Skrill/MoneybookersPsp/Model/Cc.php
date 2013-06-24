@@ -97,16 +97,10 @@ class Skrill_MoneybookersPsp_Model_Cc extends Skrill_MoneybookersPsp_Model_Abstr
         $isAvailableTS = $session->getIsAvailableCCTS();
         $payment = $quote->getPayment();
 
-        /*Mage::log($isAvailable);
-        Mage::log($isAvailableTS);
-        Mage::log(time() - $isAvailableTS);
-        Mage::log(Skrill_MoneybookersPsp_Model_Abstract::REFRESH_PMETHOD_AVAILABILITY_PERIOD);*/
-        
         if (isset($isAvailable) &&
             time() - $isAvailableTS
             >= Skrill_MoneybookersPsp_Model_Abstract::REFRESH_PMETHOD_AVAILABILITY_PERIOD)
         {
-            //Mage::log('setting isAvailable');
             $isAvailable = (bool)$this->getWPFRegisterFormUrl();
             $isAvailableTS = time();
             $payment->setAdditionalInformation('isAvailableCC', $isAvailable);
@@ -121,7 +115,6 @@ class Skrill_MoneybookersPsp_Model_Cc extends Skrill_MoneybookersPsp_Model_Abstr
             $isAvailableTS = $payment->getAdditionalInformation('isAvailableCCTS');
             if (null === $isAvailable || !isset($isAvailable))
             {
-                //Mage::log('setting isAvailable from Quote Payment');
                 $isAvailable = (bool)$this->getWPFRegisterFormUrl();
                 $isAvailableTS = time();
                 $payment->setAdditionalInformation('isAvailableCC', $isAvailable);
