@@ -31,7 +31,7 @@ function enableElements(elements) {
 
 function moneybookerspspPaymentWrap() {
     payment.moneybookersPspFormId = 'form_placeholder_moneybookerspsp_cc';
-    payment.save = payment.save.wrap(function(origSaveMethod){
+	payment.save = payment.save.wrap(function(origSaveMethod){
         var moneybookersMethods = ['moneybookerspsp_cc', 'moneybookerspsp_elv'];
         var isChecked = false;
         for (var key in moneybookersMethods){
@@ -42,24 +42,17 @@ function moneybookerspspPaymentWrap() {
                 break;
             }
         }
-	
-	if (isChecked) 
-	{
-	    if (checkout.loadWaiting!=false) return;
-    	    if (this.isMoneybookersPspDataValid[this.currentMethod] == true)
-    	    {
-            	origSaveMethod();
-    	    }
-    	    else
-    	    {
-            	checkout.setLoadWaiting('payment');
-            	var url = $(this.moneybookersPspFormId).src.split('#');
-            	$(this.moneybookersPspFormId).src = url[0]+'#save';
-    	    }
-	} 
-	else 
-	{
-	    origSaveMethod();
-	}
-    });
+		if (isChecked) {
+			if (checkout.loadWaiting!=false) return;
+            if (this.isMoneybookersPspDataValid[this.currentMethod] == true){
+                origSaveMethod();
+            }else{
+                checkout.setLoadWaiting('payment');
+                var url = $(this.moneybookersPspFormId).src.split('#');
+                $(this.moneybookersPspFormId).src = url[0]+'#save';
+            }
+		} else {
+			origSaveMethod();
+		}
+	});
 }

@@ -237,10 +237,17 @@ class Skrill_MoneybookersPsp_Model_Api extends Varien_Object
         if (null === $storeId) {
             $storeId = $this->getStore();
         }
-
         $path = 'moneybookerspsp/settings/'.$field;
         
-        return Mage::getStoreConfig($path, $storeId);
+        if ((is_a($storeId, 'Mage_Core_Model_Store') ||
+            is_a($storeId, 'Mage_Core_Model_Website'))
+            && method_exists($storeId, 'getConfig'))
+            return $storeId->getConfig($path);
+        elseif (is_numeric($storeId))
+            return Mage::getStoreConfig($path, $storeId);
+        else
+            //return Mage::getStoreConfig($path, $storeId);
+            return (string) Mage::app()->getConfig()->getNode('default/' . $path);
     }
 
     /*

@@ -42,13 +42,13 @@ IframeTransport.prototype = {
         console.log('t.save');
         var errorMessage = validate();
         if (errorMessage != '')
-		{
-            alert(errorMessage);
+	{
+	    alert(errorMessage);
             var message = '#validationError';
             this.respond(message);
-		}
-		else
-		{
+	}
+	else
+	{
             var frmTag = getElem('id', 'frontendForm', 0);
             showWaiting();
             frmTag.submit();

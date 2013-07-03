@@ -166,6 +166,8 @@ abstract class Skrill_MoneybookersPsp_Model_Abstract extends Mage_Payment_Model_
         }
         $billingAddress = $dataObject->getBillingAddress();
 
+        $this->setStore($dataObject->getStore());
+        
         $sendbaseamount = $this->getCommonConfigData('sendbaseamount');
 
         $params = array(
