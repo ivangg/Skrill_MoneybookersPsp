@@ -60,7 +60,11 @@ class Skrill_MoneybookersPsp_ConfigcheckController extends Mage_Adminhtml_Contro
 
     private function _getCommonConfigData ($field, $entity, $etype)
     {
-        $path = 'moneybookerspsp/settings/' . $field;
+        if ($field == 'merchantclientid') // PSC field
+            $path = 'paysafecard/moneybookerspsp_va_psc/' . $field;
+        else
+            $path = 'moneybookerspsp/settings/' . $field;
+        
         switch ($etype)
         {
             case self::ENTITY_DEFAULT :
@@ -207,13 +211,14 @@ class Skrill_MoneybookersPsp_ConfigcheckController extends Mage_Adminhtml_Contro
                 break;
             case self::PAYMENT_PSC :
                 $params['FRONTEND.PM.1.METHOD'] = self::VA;
-                $params['PAYMENT.CODE'] = self::VA_PA;
+                $params['PAYMENT.CODE'] = self::VA_DB;
                 $params['ACCOUNT.BRAND'] = 'PAYSAFECARD';
                 $params['FRONTEND.COLLECT_DATA'] = 'false';
                 $params['FRONTEND.PM.DEFAULT_DISABLE_ALL'] = '';
                 $params['FRONTEND.PM.1.ENABLED'] = '';
                 $params['FRONTEND.PM.1.SUBTYPES'] = '';
                 $params['FRONTEND.PM.1.METHOD'] = '';
+                $params['IDENTIFICATION.SHOPPERID'] = $this->getConfigData('merchantclientid');
                 break;
             default:
                 $params['FRONTEND.PM.1.METHOD'] = self::VA;
