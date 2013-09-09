@@ -30,6 +30,17 @@
                 <class>Skrill_MoneybookersPsp_Model</class>
             </moneybookerspsp>
         </models>
+        <events>
+            <sales_order_save_before >
+                <observers>
+                    <Skrill_MoneybookersPsp_Model_Observer>
+                        <type>singleton</type>
+                        <class>Skrill_MoneybookersPsp_Model_Observer</class>
+                        <method>hookOrderSaveBefore</method>
+                    </Skrill_MoneybookersPsp_Model_Observer>
+                </observers>
+            </sales_order_save_before>
+        </events>
         <helpers>
             <moneybookerspsp>
                 <class>Skrill_MoneybookersPsp_Helper</class>

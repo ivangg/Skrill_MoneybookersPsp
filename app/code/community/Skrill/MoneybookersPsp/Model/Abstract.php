@@ -471,9 +471,9 @@ abstract class Skrill_MoneybookersPsp_Model_Abstract extends Mage_Payment_Model_
         {
             case self::PAYMENT_TYPE_REGISTRATION:
                 return;
-            case self::PAYMENT_TYPE_PREAUTHORIZE:
-            case self::PAYMENT_TYPE_CAPTURE:
             case self::PAYMENT_TYPE_DEBIT:
+	    case self::PAYMENT_TYPE_PREAUTHORIZE:
+            case self::PAYMENT_TYPE_CAPTURE:
             case self::PAYMENT_TYPE_REFUND:
             case self::PAYMENT_TYPE_REVERSAL:
             case self::PAYMENT_TYPE_REBILL:
@@ -513,10 +513,30 @@ abstract class Skrill_MoneybookersPsp_Model_Abstract extends Mage_Payment_Model_
             case 'ACK':
                 switch ($action){
                     case self::PAYMENT_TYPE_PREAUTHORIZE:
-                        $payment->getOrder()->setCustomerNote(Mage::helper('moneybookerspsp')->__('Payment has been preauthorized.'));
+			if ((string)$result->Transaction->Processing->Result == 'ACK') {
+			    $payment->setLastTransId((string)$result->Transaction->Identification->UniqueID);
+			    $payment->setCcTransId((string)$result->Transaction->Identification->UniqueID)
+				    ->setAmountAuthorized($payment->getOrder()->getTotalDue())
+				    ->setBaseAmountAuthorized($payment->getOrder()->getBaseTotalDue())
+				    ->setBaseAmountPaid(0)
+				    ->setAmountPaid(0);
+			    $payment->save();
+			    $payment->getOrder()->setCustomerNote(Mage::helper('moneybookerspsp')->__('Payment has been preauthorized.'));
+			    return true;
+			} else{
+			    Mage::throwException($result->Transaction->Processing->Return.' ('.$result->Transaction->Processing->Return['code'].')');
+			}
                         break;
                     case self::PAYMENT_TYPE_DEBIT:
-                        $payment->getOrder()->setCustomerNote(Mage::helper('moneybookerspsp')->__('Payment has been authorized and captured.'));
+			if ((string)$result->Transaction->Processing->Result == 'ACK') {
+			    $payment->setLastTransId((string)$result->Transaction->Identification->UniqueID);
+			    $payment->setCcTransId((string)$result->Transaction->Identification->UniqueID);
+			    $payment->save();
+			    $payment->getOrder()->setCustomerNote(Mage::helper('moneybookerspsp')->__('Payment has been authorized and captured.'));
+			    return true;
+			} else{
+			    Mage::throwException($result->Transaction->Processing->Return.' ('.$result->Transaction->Processing->Return['code'].')');
+			}
                         break;
                     case self::PAYMENT_TYPE_CAPTURE:
                         $payment->getOrder()->setCustomerNote(Mage::helper('moneybookerspsp')->__('Payment has been captured.'));

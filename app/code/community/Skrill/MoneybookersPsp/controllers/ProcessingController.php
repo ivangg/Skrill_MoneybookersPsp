@@ -97,7 +97,9 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
                 $realOrderId = $this->_getCheckout()->getLastRealOrderId();
 
                 $order = Mage::getModel('sales/order')->loadByIncrementId($realOrderId);
-                if ($order->getState() != Mage_Sales_Model_Order::STATE_PROCESSING){
+                $state = $order->getState();
+                if ($state != Mage_Sales_Model_Order::STATE_PROCESSING ||
+                    $state != Mage_Sales_Model_Order::STATE_COMPLETE){
                     $this->_order = $order;
                     $this->_processCancel();
                     //$this->_redirect('moneybookerspsp/processing/failed');
@@ -150,7 +152,6 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
                 die($this->_getRegisterFailedRedirectUrl());
             } elseif (isset($this->_order) &&
                     $this->_order->getState() == Mage_Sales_Model_Order::STATE_PENDING_PAYMENT) {
-
                 $this->_processCancel();
 
                 die($this->_getFailedRedirectUrl());
@@ -178,11 +179,12 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
                 break;
             case 'DB':
                 $payment = $this->_order->getPayment()->getMethodInstance();
+                
                 $this->_order->setState(
                         Mage_Sales_Model_Order::STATE_PROCESSING, $payment->getConfigData('order_status', $this->_order->getStoreId()), Mage::helper('moneybookerspsp')->__('Payment debited successfully')
                 );
                 $paymentData = $this->_getPaymentData($data);
-                Mage::log($paymentData);
+
                 // set transaction ID
                 try {
                     $this->_order->getPayment()
@@ -212,18 +214,18 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
                 $this->_order->sendNewOrderEmail()->setEmailSent(true)->save();
                 $redirectUrl = $this->_getSuccessRedirectUrl();
                 break;
-            default:
-                if ($paymentCode[0] == 'VA' &&
-                    $paymentCode[1] == 'PA') // PaySafe Card fix
+            case 'PA' :
+                $payment = $this->_order->getPayment()->getMethodInstance();
+                $paymentData = $this->_getPaymentData($data);
+                
+                if ($paymentCode[0] == 'VA') // PaySafe Card fix
                 {
-                    $payment = $this->_order->getPayment()->getMethodInstance();
                     $this->_order->setState(
                             Mage_Sales_Model_Order::STATE_PROCESSING,
                             $payment->getConfigData('order_status',
                                                     $this->_order->getStoreId()),
                                                     Mage::helper('moneybookerspsp')->__('Payment processed successfully with PaySafe Card')
                     );
-                    $paymentData = $this->_getPaymentData($data);
                 
                     $this->_order->getPayment()
                             ->setLastTransId($paymentData['po_number'])
@@ -237,10 +239,31 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
                     {
                         $invoice->pay();
                     }
-                    
-                    $this->_order->sendNewOrderEmail()->setEmailSent(true)->save();
-                    $redirectUrl = $this->_getSuccessRedirectUrl();
                 }
+                else
+                {
+                    $order = Mage::getModel('sales/order');
+                    $order->loadByIncrementId($session->getLastRealOrderId());
+                    if (!$order->getId()) {
+                        Mage::throwException(Mage::helper('moneybookerspsp')->__('An error occured during the payment process: Order not found.'));
+                    }
+
+                    $order->setTotalPaid(0);
+                    $order->setBaseTotalPaid(0);
+                    $order->getPayment()
+                                ->setLastTransId($paymentData['po_number'])
+                                ->setCcTransId($paymentData['po_number'])
+                                ->setAmountAuthorized($order->getTotalDue())
+                                ->setBaseAmountAuthorized($order->getBaseTotalDue())
+                                ->setBaseAmountPaid(0)
+                                ->setAmountPaid(0);
+                    $order->save();
+                }
+                $this->_order->sendNewOrderEmail()->setEmailSent(true)->save();
+                $redirectUrl = $this->_getSuccessRedirectUrl();
+
+                break;
+            default:
         }
         return $redirectUrl;
     }
@@ -296,11 +319,15 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
                 }
             }
             
+            $message = ($paymentCode[1] == Skrill_MoneybookersPsp_Model_Abstract::PAYMENT_TYPE_PREAUTHORIZE) ?
+                                        Mage::helper('moneybookerspsp')->__('Payment has been preauthorized.') :
+                                        Mage::helper('moneybookerspsp')->__('Payment debited successfully');
             $order->setState(
         	    Mage_Sales_Model_Order::STATE_PROCESSING,
         	    $payment->getConfigData('order_status', $order->getStoreId()),
-		    Mage::helper('moneybookerspsp')->__('Payment debited successfully'));
-    	    $order->sendNewOrderEmail()->setEmailSent(true)->save();
+		    $message);
+    	    $order->sendNewOrderEmail()->setEmailSent(true);
+            $order->save();
 	} catch (Exception $e) {
 	    Mage::log(Mage::helper('moneybookerspsp')->__('Order not found!'));
 	}
