@@ -92,13 +92,13 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
 
         if ($lastQuoteId = $this->_getCheckout()->getMoneybookersPspLastSuccessQuoteId()) {
             $this->_getCheckout()->setLastSuccessQuoteId($lastQuoteId);
-
+            
             if ($statusCheck) {
                 $realOrderId = $this->_getCheckout()->getLastRealOrderId();
 
                 $order = Mage::getModel('sales/order')->loadByIncrementId($realOrderId);
                 $state = $order->getState();
-                if ($state != Mage_Sales_Model_Order::STATE_PROCESSING ||
+                if ($state != Mage_Sales_Model_Order::STATE_PROCESSING &&
                     $state != Mage_Sales_Model_Order::STATE_COMPLETE){
                     $this->_order = $order;
                     $this->_processCancel();
