@@ -25,6 +25,9 @@
         $order = $event->getOrder();
         $payment = $order->getPayment();
         
+        if (!preg_match('/^moneybookerspsp/', $payment->getMethod()))
+    	    return $this;
+        
         $state = $order->getState();
         if ((!$state ||
             $state === Mage_Sales_Model_Order::STATE_NEW ||
