@@ -187,7 +187,9 @@ abstract class Skrill_MoneybookersPsp_Model_Abstract extends Mage_Payment_Model_
                 'TRANSACTION.MODE'      =>  ($sendbaseamount ?   $this->getStoreWebSiteConfigData('test_mode', $dataObject->getStore()) :
                                             $this->getCommonConfigData('test_mode')) ? 'CONNECTOR_TEST' : 'LIVE',
                 
-                'IDENTIFICATION.TRANSACTIONID'  =>  $dataObject->getId() . '_' . $this->getCode(),
+                'IDENTIFICATION.TRANSACTIONID'  =>  $dataObject->getId() . '_' . $this->getCode() .
+					    ($dataObject->getIncrementId() ? '_' . $dataObject->getIncrementId() :
+									    ''),
 
                 'PRESENTATION.USAGE'    =>  $dataObject->getIncrementId(),
                 // Alternative send web site base amount and currency instead the one for the specific store view

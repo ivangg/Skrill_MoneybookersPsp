@@ -21,8 +21,84 @@ $_code=$this->getMethodCode();
 $_img  = $this->getPaymentImageSrc($_code);
 $_formId = Mage::helper('moneybookerspsp')->getFormPlaceholderId($_code);
 ?>
+<style>
+.jsOff {
+    height:  0px;
+    width: 0px;
+}
+
+#payment_form_<?php echo $_code ?> .jsOff {
+    height:  0px;
+    width: 0px;
+}
+
+#payment_form_<?php echo $_code ?> .jsOff:after {
+    content: "Javascript is Disable. You must have JavaScript enabled to proceed with your order!";
+    font: bold 11px Verdana;
+    color: #FF0000;
+}
+
+.jsOn {
+}
+
+#checkout-step-payment #payment-buttons-container .button {
+    visibility: hidden;
+}
+
+#checkout-step-payment #payment-buttons-container .buttonOn {
+    visibility: visible !important;
+}
+</style>
 <script type="text/javascript">
     isMoneybookersCcApiEnabled = true;
+    
+    Element.prototype.triggerEvent = function(eventName) {
+        if (document.createEvent)
+        {
+            var evt = document.createEvent('HTMLEvents');
+            evt.initEvent(eventName, true, true);
+    
+            return this.dispatchEvent(evt);
+        }
+    
+        if (this.fireEvent)
+            return this.fireEvent('on' + eventName);
+    };
+    
+    Event.observe(window, 'load', function(){
+        $('co-payment-form').on('change', '.radio', function(event) {
+            var element = event.findElement('[id^=p_method_]');
+            
+            if (element.id == 'p_method_moneybookerspsp_cc') {
+                var iframe = $('<?php echo $_formId ?>');
+
+                if (iframe.hasClassName('jsOff')) {
+                    iframe.addClassName('jsOn');
+                    iframe.removeClassName('jsOff');
+                }
+            }
+            
+            var div = $('payment-buttons-container');
+            var divchildren = div.childElements();
+            for (i = 0; i < divchildren.length; i++) {
+                //alert(divchildren[i].tagName.toLowerCase());
+                if (divchildren[i].tagName.toLowerCase() == 'button') {
+                    //alert('success');
+                    divchildren[i].addClassName('buttonOn');
+                }
+            }
+        });
+        
+        var radios = $$('[id^=p_method_]');
+        
+        for (i = 0; i < radios.length; i ++) {
+            if (radios[i].checked) {
+                radios[i].click();
+                $(radios[i].id).triggerEvent('change');
+                //$(radios[i].id).triggerEvent('click');
+            }
+        }
+    });
 </script>
 <?php if ($_img): ?>
         <div class="moneybookers_method_logo">
@@ -51,5 +127,6 @@ $_formId = Mage::helper('moneybookerspsp')->getFormPlaceholderId($_code);
 <?php if (Mage::getStoreConfig('general/country/default') == 'JP') { ?>
 <div id="custommessage"></div>
 <?php } ?>
-<iframe id="<?php echo $_formId ?>" allowtransparency="true" frameborder="0" scrolling="no" src="<?php echo $_iframeSrcUrl ?>"></iframe>
+<iframe class="jsOff" id="<?php echo $_formId ?>" allowtransparency="true" frameborder="0" scrolling="no" src="<?php echo $_iframeSrcUrl ?>"></iframe>
+
 </fieldset>

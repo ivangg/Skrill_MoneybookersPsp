@@ -33,6 +33,24 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
     protected function _getCheckout() {
         return Mage::getSingleton('checkout/session');
     }
+    
+    protected function parseTrnId ($trnId)
+    {
+        $usage = 0;
+        $transactionId = '';
+        Mage::log($trnId);
+        if (preg_match('/([^_]+_moneybookerspsp_[^0-9]+_)([0-9]+)/', $trnId, $matches))
+        {
+            $usage = $matches[2];
+            $transactionId = substr($matches[1], 0, strlen($matches[1]) - 1);
+        }
+        else
+        {
+            $usage = $transactionId = $trnId;
+        }
+        return array('transactionID' => $transactionId,
+                     'usage' => $usage);
+    }
 
     /**
      * Payment has been canceled at moneybookerspsp.
@@ -372,7 +390,8 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
         }
 
         $transactionId = (string) current($xml->xpath('Transaction/Identification/TransactionID'));
-        $transactionDetails = explode('_', $transactionId);
+        $transactionDetails = $this->parseTrnId($transactionId);
+        $transactionDetails = explode('_', $transactionDetails['transactionID']);
         if (count($transactionDetails) != 3) {
             Mage::throwException(Mage::helper('moneybookerspsp')->__('MoneybookersPSP 3DS: Wrong transaction ID'));
         }
@@ -422,14 +441,17 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
             Mage::throwException('MoneybookersPSP: Invalid response data.');
         }
 
-        $quoteId = explode('_', $data['IDENTIFICATION_TRANSACTIONID'], 2);
+        $transactionId = $this->parseTrnId($data['IDENTIFICATION_TRANSACTIONID']);
+        Mage::log($transactionId['transactionID']);
+        $quoteId = explode('_', $transactionId['transactionID'], 2);
         if (!count($quoteId) == 2) {
             Mage::throwException('MoneybookersPSP: Invalid response data.');
         }
 
         $method = $quoteId[1];
         $quoteId = $quoteId[0];
-
+        Mage::log($method);
+        
         if (in_array($method, $this->_getRegisterMethods())) {
             $quote = Mage::getModel('sales/quote')->load($quoteId);
             if (!$quote->getId()) {
@@ -469,7 +491,8 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
     }
 
     protected function _getPostPaymentData($data) {
-        $quoteId = explode('_', $data['IDENTIFICATION_TRANSACTIONID'], 2);
+        $transactionId = $this->parseTrnId($data['IDENTIFICATION_TRANSACTIONID']);
+        $quoteId = explode('_', $transactionId['transactionID'], 2);
         $paymentData = array(
             'quote_id' => $quoteId[0],
             'method' => $quoteId[1]);
@@ -495,7 +518,8 @@ class Skrill_MoneybookersPsp_ProcessingController extends Mage_Core_Controller_F
 
     protected function _getXmlPaymentData($data) {
         $transactionId = (string) current($data->xpath('Transaction/Identification/TransactionID'));
-        $quoteId = explode('_', $transactionId);
+        $transactionId = $this->parseTrnId($transactionId);
+        $quoteId = explode('_', $transactionId['transactionID']);
         $paymentData = array(
             'quote_id' => $quoteId[0],
             'method' => $quoteId[1]);
